@@ -13,13 +13,14 @@ const CONFIG = {
   CLIENT_AUTO: { enabled: true, max: 60, exts: ["png", "jpg", "jpeg", "webp", "svg"] },
 
   // Header (atas setiap layar)
-  LOGO_IMAGE: "assets/logo-swifasia.png",
+  LOGO_IMAGE: "assets/logo-swifasia-mark.png",
   TAGLINE: "Heartful Thermal Technology",
   GROUP_LINE: "A Member of Sanken Sangyo Group, Japan",   // ⚠ cek ejaan nama grup sebelum pameran
   QR_IMAGE: "assets/qr-swifa.png",
   WEBSITE_LABEL: "PT. SWIF ASIA",
 
-  DRACO_PATH: "https://www.gstatic.com/draco/versioned/decoders/1.5.6/",
+  // Decoder Draco (untuk .glb terkompresi) — sudah disertakan offline di vendor/draco/
+  DRACO_PATH: "vendor/draco/",
 };
 
 /* ---------------------------------------------------------------------------
@@ -152,10 +153,10 @@ const HOME_PAGES = [
     accent: ["3D PRODUCT DETAIL"],
     subtitle: "Jelajahi desain dan fitur utama furnace SWIFA dalam tampilan 3D interaktif.",
     pickLabel: "PILIH KATEGORI PRODUK",
-    preview: {                                   // contoh produk yang ditampilkan; sentuh → buka 3D
+    preview: {                                   // model 3D LIVE yang tampil di layar ini
       title: "Hybrid Melting Furnace (Tower Type)",
-      image: "assets/home/hybrid-melter.png",
-      open: { cat: 0, prod: 1 },                 // index kategori & produk di PRODUCT_CATEGORIES
+      open: { cat: 0, prod: 1 },                 // produk di PRODUCT_CATEGORIES (model, rotasi & gambar diambil dari sana)
+      link: "LIHAT DETAIL & SPESIFIKASI",        // tombol menuju halaman detail produk ini
       callout: { photo: "assets/home/assembly.jpg", text: "Sistem Combustion (JIS B 8415)" },
     },
     featuresLabel: "FITUR UTAMA",
@@ -276,7 +277,8 @@ const PRODUCT_CATEGORIES = [
           "Jangan menilai energy saving hanya dari total gas atau listrik yang digunakan. Produksi yang turun juga bisa membuat konsumsi energi total turun, meskipun efisiensi furnace justru memburuk. Ukuran utama yang perlu diperhatikan adalah Specific Energy Consumption (SEC), yaitu energi yang digunakan per satuan produksi.",
           "Sistem hybrid memungkinkan sumber panas dikombinasikan dalam satu peralatan. Potensi penghematan bergantung pada desain, tarif energi, profil produksi, serta strategi pengoperasiannya.",
         ],
-        modelFile: "models/MF_HYBRID.glb", modelRotation: { x: 0, y: 0, z: 0 }, image: "assets/home/hybrid-melter.png",
+        // File CAD ini "Z-up" → diputar x:90 agar tegak, z:90 agar sisi burner menghadap depan
+        modelFile: "models/MF_HYBRID.glb", modelRotation: { x: 90, y: 0, z: 90 }, image: "assets/home/hybrid-melter.png",
         specs: [
           { value: "15%", label: "Penghematan energi spesifik" },
           { value: "2 sumber", label: "Gas burner + electric heater" },

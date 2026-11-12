@@ -13,7 +13,7 @@ const CONFIG = {
   CLIENT_AUTO: { enabled: true, max: 60, exts: ["png", "jpg", "jpeg", "webp", "svg"] },
 
   // Header (atas setiap layar)
-  LOGO_IMAGE: "assets/logo-swifasia-mark.png",
+  LOGO_IMAGE: "assets/logo-swifasia.png",
   TAGLINE: "Heartful Thermal Technology",
   GROUP_LINE: "A Member of Sanken Sangyo Group, Japan",   // ⚠ cek ejaan nama grup sebelum pameran
   QR_IMAGE: "assets/qr-swifa.png",

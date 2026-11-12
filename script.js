@@ -168,17 +168,16 @@ const RENDER = {
   explorer(p, no) {
     const cats = PRODUCT_CATEGORIES.map((c, i) => `<button class="catb${i === 0 ? " on" : ""}" data-cat="${i}">${ic(c.icon)}<span>${esc(c.menu)}</span>${ic("right", "chev")}</button>`).join("");
     const v = p.preview;
-    const tools = [["hand", "Putar 360°"], ["zoomin", "Zoom In"], ["zoomout", "Zoom Out"], ["move", "Geser"], ["reset", "Reset"]]
-      .map(([i, t]) => `<div class="tl">${ic(i)}<small>${t}</small></div>`).join("");
     const feats = p.features.map((f) => `<div class="ft">${ic(f.icon)}<b>${esc(f.text)}</b>${f.sub ? `<small>${esc(f.sub)}</small>` : ""}</div>`).join("<i class='vs'></i>");
     return heroHTML(p, no) + `<div class="body">
         <div class="sect">${rib(p.pickLabel)}<div class="card cats">${cats}</div></div>
-        <div class="viewer grow" data-cat="${v.open.cat}" data-prod="${v.open.prod}" data-open="1">
-          <div class="vtitle">${esc(v.title)}</div><div class="v3d">${ic("cube")}<b>3D<br>VIEW</b></div>
-          <div class="vstage">${imgTag(v.image, "vimg")}<i class="hs" style="left:34%;top:44%"></i><i class="hs" style="left:56%;top:30%"></i><i class="hs" style="left:66%;top:64%"></i><i class="hs" style="left:22%;top:70%"></i></div>
-          <div class="tools">${tools}</div>
+        <div class="viewer live grow" id="hStage">
+          <div class="vtitle">${esc(v.title)}</div><div class="v3d"><span class="dot"></span><b>3D<br>LIVE</b></div>
+          <div class="dview" id="hView"><img class="dimg" id="hImg" alt=""></div>
+          ${toolsHTML()}
           ${v.callout ? `<div class="callout"><div class="cph" style="${bgi(v.callout.photo)}"></div><span>${esc(v.callout.text)}</span></div>` : ""}
-          <div class="vhint">${ic("hand")}SENTUH UNTUK MEMBUKA 3D LIVE VIEW</div>
+          <button class="vlink" data-cat="${v.open.cat}" data-prod="${v.open.prod}">${esc(v.link || "LIHAT DETAIL")}${ic("right")}</button>
+          <div class="vhint">${ic("hand")}GESER UNTUK MEMUTAR 3D</div>
         </div>
         <div class="sect">${rib(p.featuresLabel)}<div class="card feats">${feats}</div></div>
       </div>`;
@@ -224,9 +223,11 @@ function productsHTML() {
       subtitle: "Sentuh produk untuk melihat model 3D interaktif, spesifikasi, dan penjelasan detail." }, "3D")}
     <div class="body">${rows}<div class="plegend">${ic("cube")}<span>= tersedia model 3D interaktif</span></div></div></section>`;
 }
+function toolsHTML() {
+  return `<div class="tools">${[["rotate", "Putar 360°", "auto"], ["zoomin", "Zoom In", "in"], ["zoomout", "Zoom Out", "out"], ["reset", "Reset", "reset"]]
+    .map(([i, t, a]) => `<button class="tl" data-v="${a}">${ic(i)}<small>${t}</small></button>`).join("")}</div>`;
+}
 function detailHTML() {
-  const tools = [["rotate", "Putar 360°", "auto"], ["zoomin", "Zoom In", "in"], ["zoomout", "Zoom Out", "out"], ["reset", "Reset", "reset"]]
-    .map(([i, t, a]) => `<button class="tl" data-v="${a}">${ic(i)}<small>${t}</small></button>`).join("");
   return `<section class="pg on t-detail">
     <div class="hero dhero"><div class="hph" id="dPh"></div><i class="hshade"></i>
       <div class="htx"><div class="tagp"><b id="dNo">01</b><span id="dCat"></span></div><h1 id="dName"></h1><i class="uline"></i></div></div>
@@ -235,7 +236,7 @@ function detailHTML() {
       <div class="viewer live grow" id="dStage">
         <div class="vtitle" id="dVt">3D LIVE VIEW</div><div class="v3d"><span class="dot"></span><b>3D<br>LIVE</b></div>
         <div class="dview" id="dView"><img class="dimg" id="dImg" alt=""></div>
-        <div class="tools">${tools}</div>
+        ${toolsHTML()}
         <div class="dbars" id="dBars"></div>
         <div class="vhint">${ic("hand")}GESER UNTUK MEMUTAR · KEMBALI KE ISOMETRIC SETELAH ${Math.round(CONFIG.ISO_RESET_MS / 1000)} DETIK</div>
       </div>
@@ -266,8 +267,20 @@ function setMode(m) {
   S.mode = m;
   ["home", "products", "detail"].forEach((id) => els[id].classList.toggle("on", id === m));
   document.body.dataset.mode = m;
-  if (m === "detail") startRender(); else stopRender();
+  syncViewer();
   syncFooter();
+}
+/** Satu renderer 3D dipakai bergantian: layar 06 (home) atau halaman detail. */
+function syncViewer() {
+  if (S.mode === "detail") return startRender("detail");
+  const pg = HOME_PAGES[S.cur];
+  if (S.mode === "home" && pg && pg.type === "explorer" && HOSTS.home) {
+    const o = pg.preview.open, p = PRODUCT_CATEGORIES[o.cat].products[o.prod];
+    startRender("home");
+    if (V.shown !== "home:" + o.cat + ":" + o.prod) { V.shown = "home:" + o.cat + ":" + o.prod; setModel(p); }
+    return;
+  }
+  stopRender();
 }
 function syncFooter() {
   const dots = els.dots, lbl = $("#scrLbl"), next = $("#bNext");
@@ -293,6 +306,7 @@ function showHome(i) {
   if (S.mode !== "home") { setMode("home"); loop.reset(Date.now()); }
   else loop.pageChanged(Date.now());
   S.lastHome = S.cur;
+  syncViewer();
   syncFooter();
 }
 function goHomeBegin() { showHome(0); loop.reset(Date.now()); }
@@ -385,6 +399,7 @@ function selectProduct(j) {
   $("#dStats").innerHTML = specs.map((s) => `<div class="dstat"><b>${esc(s.value)}</b><span>${esc(s.label)}</span></div>`).join("");
   renderBars(p.metrics);
   buildScroll(p.detail && p.detail.length ? p.detail : [p.desc]);
+  V.shown = "detail";
   setModel(p);
   syncFooter();
   requestAnimationFrame(resizeViewer);
@@ -428,7 +443,9 @@ function bindScrollDrag() {
 /* ===========================================================================
    THREE.JS VIEWER (satu renderer dipakai bergantian)
    =========================================================================== */
-const V = { ok: false, token: 0, cache: {}, group: null, rotY: 0, rotX: 0, auto: true, drag: false, lastInt: 0, raf: 0, last: 0, scale: 1, dist: 6.4 };
+const V = { ok: false, token: 0, cache: {}, group: null, rotY: 0, rotX: 0, auto: true, drag: false, lastInt: 0, raf: 0, last: 0, scale: 1, dist: 6.4, host: "detail", shown: "" };
+const HOSTS = {};   // { detail: {stage, view, img}, home: {...} }
+const H = () => HOSTS[V.host] || HOSTS.detail;
 const ISO = { y: Math.PI / 4, x: -0.35, dist: 6.4 };
 
 function initViewer() {
@@ -461,10 +478,13 @@ function viewerTool(a) {
   else if (a === "in" || a === "out") { V.dist = Math.max(3.4, Math.min(11, V.dist * (a === "in" ? 0.85 : 1.18))); V.auto = false; V.lastInt = Date.now(); }
   else if (a === "reset") { V.dist = ISO.dist; V.rotY = ISO.y; V.rotX = ISO.x; V.auto = true; }
   placeCamera();
-  document.querySelectorAll("#dStage .tl").forEach((b) => b.classList.toggle("on", b.dataset.v === "auto" && V.auto));
+  syncTools();
+}
+function syncTools() {
+  document.querySelectorAll(".viewer.live .tl").forEach((b) => b.classList.toggle("on", b.dataset.v === "auto" && V.auto));
 }
 function resizeViewer() {
-  const m = els.view; if (!V.ok || !m) return;
+  const m = H() && H().view; if (!V.ok || !m) return;
   const w = m.clientWidth, h = m.clientHeight; if (!w || !h) return;
   V.renderer.setPixelRatio(Math.min(2, Math.max(1, (window.devicePixelRatio || 1) * V.scale)));
   V.renderer.setSize(w, h, false);
@@ -519,13 +539,13 @@ function clearGroup() {
 function setGroup(g) { clearGroup(); V.group = g; V.scene.add(g); }
 
 function setModel(p) {
-  const my = ++V.token, stage = $("#dStage"), view = els.view, img = $("#dImg");
+  const my = ++V.token, stage = H().stage, view = H().view, img = H().img;
   const show = (state) => {
     stage.classList.toggle("nomodel", state !== "model");
     stage.classList.toggle("loading", state === "loading");
     view.classList.toggle("imgmode", state === "image");
   };
-  V.rotY = ISO.y; V.rotX = ISO.x; V.auto = true; V.dist = ISO.dist; placeCamera();
+  V.rotY = ISO.y; V.rotX = ISO.x; V.auto = true; V.dist = ISO.dist; placeCamera(); syncTools();
   if (!V.ok) { img.src = p.image || ""; show(p.image ? "image" : "placeholder"); return; }
   const asImage = () => { if (my !== V.token) return; clearGroup(); if (p.image) { img.src = p.image; show("image"); } else { setGroup(buildPlaceholder()); show("placeholder"); } };
   if (!p.modelFile) { asImage(); return; }
@@ -547,12 +567,18 @@ function renderFrame(t) {
     if (Math.abs(ty - V.rotY) < 0.01 && Math.abs(ISO.x - V.rotX) < 0.01) { V.auto = true; V.dist = ISO.dist; placeCamera(); }
   }
   if (V.auto && !V.drag) V.rotY += 0.006 * dt * 60;
+  if (V.wasAuto !== V.auto) { V.wasAuto = V.auto; syncTools(); }
   if (V.group) { V.group.rotation.y = V.rotY; V.group.rotation.x = V.rotX; }
   if (V.ok) V.renderer.render(V.scene, V.camera);
   scrollTick(dt);
 }
-function startRender() {
-  if (V.ok && V.renderer.domElement.parentNode !== els.view) els.view.insertBefore(V.renderer.domElement, els.view.firstChild);
+function startRender(host) {
+  if (host && host !== V.host) { V.host = host; V.shown = ""; }
+  const view = H().view;
+  if (V.ok && V.renderer.domElement.parentNode !== view) {
+    view.insertBefore(V.renderer.domElement, view.firstChild);
+    if (V.group && !V.shown) clearGroup();        // model lama milik host lain
+  }
   resizeViewer();
   if (!V.raf) { V.last = 0; V.raf = requestAnimationFrame(renderFrame); }
 }
@@ -627,7 +653,8 @@ function start() {
   els.pages = [...document.querySelectorAll("#homePages .pg")];
   els.products.innerHTML = productsHTML();
   els.detail.innerHTML = detailHTML();
-  els.view = $("#dView");
+  HOSTS.detail = { stage: $("#dStage"), view: $("#dView"), img: $("#dImg") };
+  if ($("#hStage")) HOSTS.home = { stage: $("#hStage"), view: $("#hView"), img: $("#hImg") };
 
   loop = new LoopController({ pageMs: CONFIG.PAGE_MS, holdMs: CONFIG.HOLD_MS, immuneMs: CONFIG.IMMUNE_MS, now: Date.now() });
   initViewer();

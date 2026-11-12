@@ -270,7 +270,14 @@ button.tl:active,.tl.on{background:var(--blue2)}
 .callout span{display:block;text-align:center;font-style:italic;font-weight:800;font-size:16px;color:var(--navy);padding:8px 4px 2px}
 .vhint{position:absolute;left:0;right:0;bottom:14px;z-index:5;display:flex;justify-content:center;align-items:center;gap:10px;color:#fff;font-weight:700;font-size:16px;letter-spacing:.6px;opacity:.85}
 .vhint .ic{font-size:24px}
-.viewer[data-open]{cursor:pointer}
+.vlink{position:absolute;right:18px;bottom:52px;z-index:6;display:flex;align-items:center;gap:10px;height:58px;padding:0 20px 0 24px;border-radius:30px;
+  background:linear-gradient(180deg,#FF3B3B,var(--red) 55%,var(--red2));color:#fff;font:italic 900 19px/1 "Mont";letter-spacing:.3px;
+  box-shadow:0 0 0 3px rgba(255,255,255,.25),0 8px 20px rgba(227,16,30,.5)}
+.vlink .ic{font-size:24px;stroke-width:3}
+.vlink:active{transform:scale(.96)}
+#hStage .callout{width:220px;top:90px}
+#hStage .callout .cph{height:100px}
+#hStage .dimg{right:250px;width:calc(100% - 370px)}
 .feats{display:flex;align-items:stretch;padding:32px 8px 16px}
 .ft{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 6px}
 .ft .ic{font-size:52px;color:var(--blue);margin-bottom:8px}
